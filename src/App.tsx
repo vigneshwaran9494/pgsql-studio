@@ -12,7 +12,7 @@ function App() {
   const { connections } = useConnections();
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | undefined>();
   const [tabs, setTabs] = useState<Tab[]>([
-    { id: '1', label: 'Query 1', connectionId: undefined },
+    { id: '1', label: 'Query 1', connectionId: undefined, type: 'query' },
   ]);
   const [activeTab, setActiveTab] = useState('1');
 
@@ -22,6 +22,7 @@ function App() {
       id: newTabId,
       label: `Query ${tabs.length + 1}`,
       connectionId: selectedConnectionId,
+      type: 'query',
     };
     setTabs((prev) => [...prev, newTab]);
     setActiveTab(newTabId);
@@ -50,6 +51,22 @@ function App() {
       )
     );
   };
+
+  const handleTableSelect = useCallback((schema: string, table: string) => {
+    if (!selectedConnectionId) return;
+    
+    const tabId = String(Date.now());
+    const newTab: Tab = {
+      id: tabId,
+      label: `${schema}.${table}`,
+      connectionId: selectedConnectionId,
+      type: 'table',
+      schema,
+      table,
+    };
+    setTabs((prev) => [...prev, newTab]);
+    setActiveTab(tabId);
+  }, [selectedConnectionId]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -93,6 +110,7 @@ function App() {
         <Sidebar
           selectedConnectionId={selectedConnectionId}
           onConnectionSelect={handleConnectionSelect}
+          onTableSelect={handleTableSelect}
         />
         <div className="flex-1 flex flex-col min-w-0">
           <TabManager

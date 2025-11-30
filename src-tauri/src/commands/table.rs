@@ -145,3 +145,79 @@ pub async fn update_table_data(request: UpdateTableDataRequest) -> Result<usize,
 
     Ok(affected_rows)
 }
+
+#[derive(Debug, Deserialize)]
+pub struct GetSchemasRequest {
+    pub connection_id: String,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct SchemaInfo {
+    pub name: String,
+}
+
+#[tauri::command]
+pub async fn get_schemas(request: GetSchemasRequest) -> Result<Vec<SchemaInfo>, String> {
+    let client = get_client_for_connection(&request.connection_id).await?;
+
+    let query = r#"
+        SELECT DISTINCT schema_name
+        FROM information_schema.schemata
+        WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast')
+        ORDER BY schema_name
+    "#;
+
+    let rows = client
+        .query(query, &[])
+        .await
+        .map_err(|e| format!("Failed to query schemas: {}", e))?;
+
+    let schemas: Vec<SchemaInfo> = rows
+        .iter()
+        .map(|row| SchemaInfo {
+            name: row.get("schema_name"),
+        })
+        .collect();
+
+    Ok(schemas)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GetTablesRequest {
+    pub connection_id: String,
+    pub schema: String,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct TableInfo {
+    pub name: String,
+    pub schema: String,
+}
+
+#[tauri::command]
+pub async fn get_tables(request: GetTablesRequest) -> Result<Vec<TableInfo>, String> {
+    let client = get_client_for_connection(&request.connection_id).await?;
+
+    let query = r#"
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = $1
+        AND table_type = 'BASE TABLE'
+        ORDER BY table_name
+    "#;
+
+    let rows = client
+        .query(query, &[&request.schema])
+        .await
+        .map_err(|e| format!("Failed to query tables: {}", e))?;
+
+    let tables: Vec<TableInfo> = rows
+        .iter()
+        .map(|row| TableInfo {
+            name: row.get("table_name"),
+            schema: request.schema.clone(),
+        })
+        .collect();
+
+    Ok(tables)
+}

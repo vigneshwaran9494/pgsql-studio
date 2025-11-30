@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -9,6 +9,7 @@ import {
 } from './ui/Table';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { QueryResult } from '../hooks/useQuery';
 
 interface TableViewProps {
   connectionId: string;
@@ -28,7 +29,7 @@ export function TableView({ connectionId, schema, table }: TableViewProps) {
     setLoading(true);
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      const result = await invoke('get_table_data', {
+      const result = await invoke<QueryResult>('get_table_data', {
         request: {
           connection_id: connectionId,
           schema,
@@ -46,8 +47,10 @@ export function TableView({ connectionId, schema, table }: TableViewProps) {
     }
   };
 
-  // This would be called when component mounts or connection/table changes
-  // useEffect(() => { loadData(); }, [connectionId, schema, table]);
+  // Load data when component mounts or connection/table changes
+  useEffect(() => {
+    loadData();
+  }, [connectionId, schema, table]);
 
   const handleCellClick = (row: number, col: number) => {
     setEditingCell({ row, col });

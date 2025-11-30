@@ -10,13 +10,15 @@ import {
 } from './ui/DropdownMenu';
 import { useConnections, ConnectionConfig } from '../hooks/useConnection';
 import { ConnectionManager } from './ConnectionManager';
+import { DatabaseTree } from './DatabaseTree';
 
 interface SidebarProps {
   selectedConnectionId?: string;
   onConnectionSelect: (id: string) => void;
+  onTableSelect?: (schema: string, table: string) => void;
 }
 
-export function Sidebar({ selectedConnectionId, onConnectionSelect }: SidebarProps) {
+export function Sidebar({ selectedConnectionId, onConnectionSelect, onTableSelect }: SidebarProps) {
   const { connections, reload } = useConnections();
   const [connectionDialogOpen, setConnectionDialogOpen] = useState(false);
   const [editingConnection, setEditingConnection] = useState<ConnectionConfig | undefined>();
@@ -51,7 +53,8 @@ export function Sidebar({ selectedConnectionId, onConnectionSelect }: SidebarPro
   return (
     <>
       <div className="w-64 border-r bg-muted/30 flex flex-col">
-        <div className="p-4 border-b">
+        {/* Connections Section */}
+        <div className="p-4 border-b shrink-0">
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-semibold">Connections</h2>
             <Button
@@ -69,7 +72,7 @@ export function Sidebar({ selectedConnectionId, onConnectionSelect }: SidebarPro
             className="h-8"
           />
         </div>
-        <div className="flex-1 overflow-auto">
+        <div className="overflow-auto shrink-0" style={{ maxHeight: selectedConnectionId ? '40%' : '100%' }}>
           {filteredConnections.length === 0 ? (
             <div className="p-4 text-sm text-muted-foreground text-center">
               {connections.length === 0
@@ -114,6 +117,21 @@ export function Sidebar({ selectedConnectionId, onConnectionSelect }: SidebarPro
             </div>
           )}
         </div>
+
+        {/* Database Tree Section */}
+        {selectedConnectionId && (
+          <>
+            <div className="border-t p-4 border-b shrink-0">
+              <h2 className="font-semibold text-sm">Database</h2>
+            </div>
+            <div className="flex-1 overflow-auto min-h-0">
+              <DatabaseTree
+                connectionId={selectedConnectionId}
+                onTableSelect={onTableSelect}
+              />
+            </div>
+          </>
+        )}
       </div>
       <ConnectionManager
         open={connectionDialogOpen}

@@ -3,11 +3,15 @@ import { X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/Tabs';
 import { Button } from './ui/Button';
 import { QueryEditor } from './QueryEditor';
+import { TableView } from './TableView';
 
 export interface Tab {
   id: string;
   label: string;
   connectionId?: string;
+  type?: 'query' | 'table';
+  schema?: string;
+  table?: string;
 }
 
 interface TabManagerProps {
@@ -72,12 +76,20 @@ export function TabManager({
           value={tab.id}
           className="flex-1 m-0 mt-0 overflow-hidden"
         >
-          <QueryEditor
-            connectionId={tab.connectionId}
-            onConnectionChange={(id) => {
-              // Update tab connection
-            }}
-          />
+          {tab.type === 'table' && tab.connectionId && tab.schema && tab.table ? (
+            <TableView
+              connectionId={tab.connectionId}
+              schema={tab.schema}
+              table={tab.table}
+            />
+          ) : (
+            <QueryEditor
+              connectionId={tab.connectionId}
+              onConnectionChange={(id) => {
+                // Update tab connection
+              }}
+            />
+          )}
         </TabsContent>
       ))}
     </Tabs>

@@ -21,6 +21,8 @@ fn main() {
             commands::table::get_table_schema_cmd,
             commands::table::get_table_data,
             commands::table::update_table_data,
+            commands::table::get_schemas,
+            commands::table::get_tables,
             commands::erd::get_erd_data,
         ])
         .run(tauri::generate_context!())
